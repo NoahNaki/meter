@@ -113,15 +113,8 @@ namespace KiwiAFK.Memory
 
         private void UpdatePointerChain()
         {
-            // Use your saved pattern (from initial scanning) to locate the new base address.
-            // This is where you'll implement your memory scanning logic.
-            // For example, reinitialize the process and recalculate the pointer chain offsets.
             Console.WriteLine("Pointer chain invalid. Refreshing pointer chain...");
-
-            // You might want to call InitializeProcess() again or implement your custom scanning logic here.
             InitializeProcess();
-
-            // Optionally, log or notify that the pointer chain has been updated.
         }
 
 
