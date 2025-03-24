@@ -59,15 +59,19 @@ namespace KiwiAFK.Memory
             {
                 IntPtr currentAddress = baseModuleAddress;
 
+                // Traverse the pointer chain
                 for (int i = 0; i < offsets.Length - 1; i++)
                 {
                     currentAddress = ReadPointer(currentAddress, (int)offsets[i]);
                     if (currentAddress == IntPtr.Zero)
                     {
-                        throw new Exception($"Null pointer encountered at offset index {i}");
+                        // The pointer is invalid - refresh the pointer chain
+                        UpdatePointerChain();
+                        return new List<string>(); // Or optionally, break out and try again later.
                     }
                 }
 
+                // Read combat log entries as usual
                 for (int i = 0; i < COMBAT_LOG_LENGTH; i++)
                 {
                     try
@@ -101,24 +105,48 @@ namespace KiwiAFK.Memory
             }
             catch (Exception ex)
             {
-                throw new Exception("Error reading memory. Please contact caera1911 on discord.", ex);
+                throw new Exception("Error reading memory. Please contact support.", ex);
             }
 
             return lines;
         }
 
+        private void UpdatePointerChain()
+        {
+            // Use your saved pattern (from initial scanning) to locate the new base address.
+            // This is where you'll implement your memory scanning logic.
+            // For example, reinitialize the process and recalculate the pointer chain offsets.
+            Console.WriteLine("Pointer chain invalid. Refreshing pointer chain...");
+
+            // You might want to call InitializeProcess() again or implement your custom scanning logic here.
+            InitializeProcess();
+
+            // Optionally, log or notify that the pointer chain has been updated.
+        }
+
+
+
         private IntPtr ReadPointer(IntPtr baseAddress, int offset)
         {
             byte[] buffer = new byte[8];
             IntPtr bytesRead;
-
-            if (!ReadProcessMemory(processHandle, IntPtr.Add(baseAddress, offset), buffer, buffer.Length, out bytesRead))
+            try
             {
-                throw new Exception($"Failed to read memory at address {baseAddress.ToInt64() + offset:X}");
+                if (!ReadProcessMemory(processHandle, IntPtr.Add(baseAddress, offset), buffer, buffer.Length, out bytesRead))
+                {
+                    // Log failure and return a null pointer instead of throwing immediately
+                    return IntPtr.Zero;
+                }
+            }
+            catch (Exception)
+            {
+                // In case of an exception, return a null pointer
+                return IntPtr.Zero;
             }
 
             return new IntPtr(BitConverter.ToInt64(buffer, 0));
         }
+
 
         private string ReadString(IntPtr address, int size, string encoding = "utf-16le")
         {
